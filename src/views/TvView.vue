@@ -1,11 +1,13 @@
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useGenreStore } from '@/stores/genre';
 import api from '@/plugins/axios';
 import Loading from 'vue-loading-overlay';
 
 const isLoading = ref(false);
 const genres = ref([]);
 const tv = ref([]);
+const genreStore = useGenreStore();
 
 const listTv = async (genreId) => {
   isLoading.value = true;
@@ -20,15 +22,14 @@ const listTv = async (genreId) => {
 }
 
 onMounted(async () => {
-  const response = await api.get('genre/tv/list?language=pt-BR');
-  genres.value = response.data.genres;
+  await genreStore.getAllGenres('tv');
 });
 </script>
 
 <template>
   <h1>Programas de TV</h1>
   <ul class="genre-list">
-    <li v-for="genre in genres" :key="genre.id" @click="listTv(genre.id)" class="genre-item">
+    <li v-for="genre in genreStore.genres" :key="genre.id" @click="listTv(genre.id)" class="genre-item">
       {{ genre.name }}
     </li>
   </ul>
