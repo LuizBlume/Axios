@@ -5,8 +5,12 @@ import api from '@/plugins/axios';
 export const useGenreStore = defineStore('genre', () => {
   const state = reactive({
     genres: [],
+    currentGenreId: null,
   });
-
+  const currentGenreId = computed(() => state.currentGenreId);
+  const setCurrentGenreId = (genreId) => {
+    state.currentGenreId = genreId;
+  };
   const genres = computed(() => state.genres);
   const getGenreName = (id) =>
     state.genres.find((genre) => genre.id === id).name;
@@ -16,5 +20,6 @@ export const useGenreStore = defineStore('genre', () => {
     state.genres = response.data.genres;
   };
 
-  return { genres, getAllGenres, getGenreName };
+  return { genres, getAllGenres, getGenreName, currentGenreId,
+    setCurrentGenreId };
 });
