@@ -4,6 +4,7 @@ import { ref, onMounted } from 'vue';
 import api from '@/plugins/axios';
 import Loading from 'vue-loading-overlay';
 import { useGenreStore } from '@/stores/genre';
+// import option from '@/plugins/axios';
 
 const genreStore = useGenreStore();
 const formatDate = (date) => new Date(date).toLocaleDateString('pt-BR');
