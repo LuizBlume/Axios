@@ -3,24 +3,24 @@ import { useRouter } from 'vue-router';
 import { ref, onMounted } from 'vue';
 import Loading from 'vue-loading-overlay';
 import { useGenreStore } from '@/stores/genre';
-import { useTvStore } from '@/stores/tv'; // Mudança para usar a store de TV
+import { useMovieStore } from '@/stores/movie';
 
 const genreStore = useGenreStore();
-const tvStore = useTvStore(); // Usando a store de séries de TV
+const movieStore = useMovieStore();
 const router = useRouter();
 const isLoading = ref(false);
-const tvShows = ref([]);
+const movies = ref([]);
 const GENRES_TO_FETCH = [80, 10752]; // Crime (80) e Guerra (10752)
-const openTvShow = (tvShowId) => {
-  router.push({ name: 'TvShowDetails', params: { tvShowId } }); // Alterado para 'TvShowDetails'
+const openMovie = (movieId) => {
+  router.push({ name: 'MovieDetails', params: { movieId } });
 };
-const listTvShows = async () => {
+const listMovies = async () => {
   isLoading.value = true;
   try {
-    const response = await tvStore.getTvShowsByGenre(GENRES_TO_FETCH.join(','));
-    tvShows.value = response; // Alterado para usar séries de TV
+    const response = await movieStore.getMoviesByGenre(GENRES_TO_FETCH.join(','));
+    movies.value = response;
   } catch (error) {
-    console.error('Erro ao carregar séries de TV:', error);
+    console.error('Erro ao carregar filmes:', error);
   } finally {
     isLoading.value = false;
   }
@@ -28,23 +28,23 @@ const listTvShows = async () => {
 
 onMounted(async () => {
   isLoading.value = true;
-  await genreStore.getAllGenres('tv'); // Alterado para 'tv'
-  await listTvShows(); // Alterado para 'listTvShows'
+  await genreStore.getAllGenres('movie');
+  await listMovies();
   isLoading.value = false;
 });
 </script>
 
 <template>
   <div class="container">
-    <h1>Séries de TV de Guerra e Crime</h1>
+    <h1>Filmes de Guerra e Crime</h1>
     <loading v-model:active="isLoading" is-full-page />
-    <div class="tv-show-list">
-      <div v-for="tvShow in tvShows" :key="tvShow.id" class="tv-show-card">
-        <img :src="`https://image.tmdb.org/t/p/w500${tvShow.poster_path}`" :alt="tvShow.name"
-          @click="openTvShow(tvShow.id)" />
-        <div class="tv-show-details">
-          <p class="tv-show-title">{{ tvShow.name }}</p>
-          <p class="tv-show-release-date">{{ new Date(tvShow.first_air_date).toLocaleDateString('pt-BR') }}</p>
+    <div class="movie-list">
+      <div v-for="movie in movies" :key="movie.id" class="movie-card">
+        <img :src="`https://image.tmdb.org/t/p/w500${movie.poster_path}`" :alt="movie.title"
+          @click="openMovie(movie.id)" />
+        <div class="movie-details">
+          <p class="movie-title">{{ movie.title }}</p>
+          <p class="movie-release-date">{{ new Date(movie.release_date).toLocaleDateString('pt-BR') }}</p>
         </div>
       </div>
     </div>
@@ -52,15 +52,16 @@ onMounted(async () => {
 </template>
 
 <style scoped lang="scss">
-/* Variáveis */
 $primary-bg: #121212;
 $secondary-bg: #1f1f1f;
 $highlight: #ff9800;
 $text-primary: #f5f5f5;
-$text-muted: lighten($text-primary, 20%);
+$text-muted: (
+  $text-primary,
+  20%
+);
 $shadow: rgba(0, 0, 0, 0.5);
 
-/* Reset */
 * {
   margin: 0;
   padding: 0;
@@ -68,7 +69,6 @@ $shadow: rgba(0, 0, 0, 0.5);
 }
 
 .container {
-  height: auto;
   font-family: 'Roboto', sans-serif;
   background: linear-gradient(180deg, #2b2b2b, #000000);
   color: $text-primary;
@@ -81,7 +81,7 @@ h1 {
   text-shadow: 0 2px 4px $shadow;
 }
 
-.tv-show-list {
+.movie-list {
   display: flex;
   flex-wrap: wrap;
   gap: 1.5rem;
@@ -89,7 +89,7 @@ h1 {
   padding: 2rem;
 }
 
-.tv-show-card {
+.movie-card {
   background-color: $secondary-bg;
   border-radius: 0.5rem;
   overflow: hidden;
@@ -115,11 +115,11 @@ h1 {
     }
   }
 
-  .tv-show-details {
+  .movie-details {
     padding: 0.8rem;
     text-align: center;
 
-    .tv-show-title {
+    .movie-title {
       font-size: 1.2rem;
       font-weight: bold;
       color: $highlight;
@@ -127,14 +127,13 @@ h1 {
       text-shadow: 0 1px 2px $shadow;
     }
 
-    .tv-show-release-date {
+    .movie-release-date {
       font-size: 0.9rem;
       color: $text-muted;
     }
   }
 }
 
-/* Estilo do Loading */
 .loading-overlay {
   position: fixed;
   top: 0;

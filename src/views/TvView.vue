@@ -3,24 +3,24 @@ import { useRouter } from 'vue-router';
 import { ref, onMounted } from 'vue';
 import Loading from 'vue-loading-overlay';
 import { useGenreStore } from '@/stores/genre';
-import { useTvStore } from '@/stores/tv'; // Usando a store de séries de TV
+import { useTvStore } from '@/stores/tv';
 
 const genreStore = useGenreStore();
-const tvStore = useTvStore(); // Usando a store de séries de TV
+const tvStore = useTvStore();
 const router = useRouter();
 const isLoading = ref(false);
 const tvShows = ref([]);
 const GENRES_TO_FETCH = [80, 10752]; // Crime (80) e Guerra (10752)
 
 const openTvShow = (tvShowId) => {
-  router.push({ name: 'TvDetails', params: { tvId: tvId } }); // Corrigido para passar tvShowId
+  router.push({ name: 'TvDetails', params: { tvId: tvId } });
 };
 
 const listTvShows = async () => {
   isLoading.value = true;
   try {
-    const response = await tvStore.getTvByGenre(GENRES_TO_FETCH.join(',')); // Corrigido para usar getTvByGenre
-    tvShows.value = response; // Usando a lista de séries de TV
+    const response = await tvStore.getTvByGenre(GENRES_TO_FETCH.join(','));
+    tvShows.value = response;
   } catch (error) {
     console.error('Erro ao carregar séries de TV:', error);
   } finally {
@@ -30,8 +30,8 @@ const listTvShows = async () => {
 
 onMounted(async () => {
   isLoading.value = true;
-  await genreStore.getAllGenres('tv'); // Alterado para 'tv'
-  await listTvShows(); // Corrigido para chamar listTvShows
+  await genreStore.getAllGenres('tv');
+  await listTvShows(); 
   isLoading.value = false;
 });
 </script>
@@ -54,15 +54,12 @@ onMounted(async () => {
 </template>
 
 <style scoped lang="scss">
-/* Variáveis */
 $primary-bg: #121212;
 $secondary-bg: #1f1f1f;
 $highlight: #ff9800;
 $text-primary: #f5f5f5;
 $text-muted: lighten($text-primary, 20%);
 $shadow: rgba(0, 0, 0, 0.5);
-
-/* Reset */
 * {
   margin: 0;
   padding: 0;
@@ -135,8 +132,6 @@ h1 {
     }
   }
 }
-
-/* Estilo do Loading */
 .loading-overlay {
   position: fixed;
   top: 0;
