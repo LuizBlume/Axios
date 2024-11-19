@@ -1,161 +1,150 @@
 <script setup>
-import { useRouter } from 'vue-router'
+import { useRouter } from 'vue-router';
 import { ref, onMounted } from 'vue';
-import api from '@/plugins/axios';
 import Loading from 'vue-loading-overlay';
 import { useGenreStore } from '@/stores/genre';
-// import option from '@/plugins/axios';
+import { useTvStore } from '@/stores/tv'; // Mudança para usar a store de TV
 
 const genreStore = useGenreStore();
-const formatDate = (date) => new Date(date).toLocaleDateString('pt-BR');
-const getGenreName = (id) => genres.value.find((genre) => genre.id === id).name
+const tvStore = useTvStore(); // Usando a store de séries de TV
+const router = useRouter();
 const isLoading = ref(false);
-const genres = ref([]);
-const movies = ref([]);
-const router = useRouter()
-function openMovie(movieId) {
-  router.push({ name: 'MovieDetails', params: { movieId } });
-}
-const listMovies = async (genreId) => {
-  genreStore.setCurrentGenreId((genreId))
-  isLoading.value = true;
-  const response = await api.get('discover/movie', {
-    params: {
-      with_genres: genreId,
-      language: 'pt-BR'
-    }
-  });
-  movies.value = response.data.results
-  isLoading.value = false;
+const tvShows = ref([]);
+const GENRES_TO_FETCH = [80, 10752]; // Crime (80) e Guerra (10752)
+const openTvShow = (tvShowId) => {
+  router.push({ name: 'TvShowDetails', params: { tvShowId } }); // Alterado para 'TvShowDetails'
 };
+const listTvShows = async () => {
+  isLoading.value = true;
+  try {
+    const response = await tvStore.getTvShowsByGenre(GENRES_TO_FETCH.join(','));
+    tvShows.value = response; // Alterado para usar séries de TV
+  } catch (error) {
+    console.error('Erro ao carregar séries de TV:', error);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
 onMounted(async () => {
   isLoading.value = true;
-  await genreStore.getAllGenres('movie');
+  await genreStore.getAllGenres('tv'); // Alterado para 'tv'
+  await listTvShows(); // Alterado para 'listTvShows'
   isLoading.value = false;
 });
 </script>
+
 <template>
-  <h1>Filmes</h1>
-  <ul class="genre-list">
-    <li v-for="genre in genreStore.genres" :key="genre.id" @click="listMovies(genre.id)" class="genre-item"
-      :class="{ active: genre.id === genreStore.currentGenreId }">
-      {{ genre.name }}
-    </li>
-  </ul>
-  <loading v-model:active="isLoading" is-full-page />
-  <div class="movie-list">
-    <div v-for="movie in movies" :key="movie.id" class="movie-card">
-
-      <img :src="`https://image.tmdb.org/t/p/w500${movie.poster_path}`" :alt="movie.title"
-        @click="openMovie(movie.id)" />
-      <div class="movie-details">
-        <p class="movie-title">{{ movie.title }}</p>
-        <p class="movie-release-date">{{ formatDate(movie.release_date) }}</p>
-        <p class="movie-genres">
-          <span v-for="genre_id in movie.genre_ids" :key="genre_id" @click="listMovies(genre_id)"
-            :class="{ active: genre_id === genreStore.currentGenreId }">
-            {{ genreStore.getGenreName(genre_id) }}
-          </span>
-        </p>
+  <div class="container">
+    <h1>Séries de TV de Guerra e Crime</h1>
+    <loading v-model:active="isLoading" is-full-page />
+    <div class="tv-show-list">
+      <div v-for="tvShow in tvShows" :key="tvShow.id" class="tv-show-card">
+        <img :src="`https://image.tmdb.org/t/p/w500${tvShow.poster_path}`" :alt="tvShow.name"
+          @click="openTvShow(tvShow.id)" />
+        <div class="tv-show-details">
+          <p class="tv-show-title">{{ tvShow.name }}</p>
+          <p class="tv-show-release-date">{{ new Date(tvShow.first_air_date).toLocaleDateString('pt-BR') }}</p>
+        </div>
       </div>
-
     </div>
   </div>
 </template>
-<style scoped>
-.genre-list {
+
+<style scoped lang="scss">
+/* Variáveis */
+$primary-bg: #121212;
+$secondary-bg: #1f1f1f;
+$highlight: #ff9800;
+$text-primary: #f5f5f5;
+$text-muted: lighten($text-primary, 20%);
+$shadow: rgba(0, 0, 0, 0.5);
+
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.container {
+  height: auto;
+  font-family: 'Roboto', sans-serif;
+  background: linear-gradient(180deg, #2b2b2b, #000000);
+  color: $text-primary;
+}
+
+h1 {
+  font-size: 2.5rem;
+  text-align: center;
+  color: $highlight;
+  text-shadow: 0 2px 4px $shadow;
+}
+
+.tv-show-list {
   display: flex;
-  justify-content: center;
   flex-wrap: wrap;
   gap: 1.5rem;
-  list-style: none;
-  margin-bottom: 2rem;
-  transition: transform 0.3s ease;
-}
-
-.genre-item {
-  background-color: #387250;
-  border-radius: 1rem;
-  padding: 0.6rem 1.2rem;
-  color: #fff;
-  transition: all 0.3s ease;
-}
-
-.genre-item:hover {
-  cursor: pointer;
-  background-color: #4e9e5f;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.movie-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
   justify-content: center;
+  padding: 2rem;
 }
 
-.movie-card {
-  width: 15rem;
-  height: auto;
+.tv-show-card {
+  background-color: $secondary-bg;
   border-radius: 0.5rem;
   overflow: hidden;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  width: 15rem;
+  box-shadow: 0 4px 8px $shadow;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.movie-card img {
-  width: 100%;
-  height: 20rem;
-  object-fit: cover;
-}
-
-.movie-card:hover {
-  transform: scale(1.05);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
-}
-
-.movie-details {
-  padding: 0.5rem;
-}
-
-.movie-title {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #444;
-  margin-bottom: 0.3rem;
-}
-
-.movie-genres {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-  justify-content: center;
-}
-
-.movie-genres span {
-  background-color: #748708;
-  border-radius: 0.5rem;
-  padding: 0.3rem 0.6rem;
-  color: #fff;
-  font-size: 0.9rem;
-  font-weight: bold;
-  transition: background-color 0.3s ease;
-}
-
-.movie-genres span:hover {
   cursor: pointer;
-  background-color: #455a08;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  margin-bottom: 2rem;
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 16px $shadow;
+  }
+
+  img {
+    width: 100%;
+    height: 20rem;
+    object-fit: cover;
+    transition: filter 0.3s ease;
+
+    &:hover {
+      filter: brightness(0.9);
+    }
+  }
+
+  .tv-show-details {
+    padding: 0.8rem;
+    text-align: center;
+
+    .tv-show-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: $highlight;
+      margin-bottom: 0.3rem;
+      text-shadow: 0 1px 2px $shadow;
+    }
+
+    .tv-show-release-date {
+      font-size: 0.9rem;
+      color: $text-muted;
+    }
+  }
 }
 
-.active {
-  background-color: #67b086;
-  font-weight: bold;
-}
-
-.movie-genres span.active {
-  background-color: #abc322;
-  color: #000;
-  font-weight: bolder;
+/* Estilo do Loading */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 </style>
