@@ -12,14 +12,8 @@ export const useTvStore = defineStore('tv', () => {
 
   const getTvByGenre = async (genreIds, page = 1) => {
     try {
-      const response = await api.get('discover/tv', {
-        params: {
-          with_genres: genreIds,
-          language: 'pt-BR',
-          page,
-        },
-      });
-      state.tvByGenre = response.data.results;
+      const response = await api.get('discover/tv');
+      state.tvByGenre = response.data;
       return response.data.results;
     } catch (error) {
       console.error('Erro ao buscar programas de tv:', error);
@@ -28,7 +22,7 @@ export const useTvStore = defineStore('tv', () => {
 
   const getTvDetail = async (tvId) => {
     try {
-      const response = await api.get(`discover/${tvId}`, {
+      const response = await api.get(`discover/tv/${tvId}`, {
         params: { language: 'pt-BR' },
       });
       state.currentTv = response.data;
@@ -37,7 +31,8 @@ export const useTvStore = defineStore('tv', () => {
     }
   };
 
-  return { 
+  return {
+    state, 
     currentTv, 
     getTvDetail, 
     tvByGenre, 

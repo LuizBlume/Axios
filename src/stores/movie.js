@@ -20,7 +20,10 @@ export const useMovieStore = defineStore('movie', () => {
         },
       });
       state.moviesByGenre = response.data.results;
-      return response.data.results;
+      return {
+        results: response.data.results,
+        totalPages: response.data.total_pages,
+      }
     } catch (error) {
       console.error('Erro ao buscar filmes:', error);
     }
