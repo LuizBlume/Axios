@@ -20,6 +20,9 @@ $text-color: #f5f5f5;
 $accent-color: #ff9800;
 
 .header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
   display: flex;
   justify-content: space-between;
   align-items: center;
