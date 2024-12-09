@@ -2,6 +2,7 @@
 import { useRouter } from 'vue-router';
 import { ref, onMounted } from 'vue';
 import Loading from 'vue-loading-overlay';
+import 'vue-loading-overlay/dist/css/index.css'; // Importação do CSS do loading overlay
 import { useGenreStore } from '@/stores/genre';
 import { useTvStore } from '@/stores/tv';
 
@@ -13,14 +14,14 @@ const tvShows = ref([]);
 const GENRES_TO_FETCH = [80, 10752]; // Crime (80) e Guerra (10752)
 
 const openTvShow = (tvShowId) => {
-  router.push({ name: 'TvDetails', params: { tvId: tvId } });
+  router.push({ name: 'TvDetails', params: { tvId: tvShowId } });
 };
 
 const listTvShows = async () => {
   isLoading.value = true;
   try {
     const response = await tvStore.getTvByGenre(GENRES_TO_FETCH.join(','));
-    tvShows.value = response;
+    tvShows.value = response || [];
   } catch (error) {
     console.error('Erro ao carregar séries de TV:', error);
   } finally {
@@ -31,7 +32,7 @@ const listTvShows = async () => {
 onMounted(async () => {
   isLoading.value = true;
   await genreStore.getAllGenres('tv');
-  await listTvShows(); 
+  await listTvShows();
   isLoading.value = false;
 });
 </script>
@@ -39,14 +40,20 @@ onMounted(async () => {
 <template>
   <div class="container">
     <h1>Séries de TV de Guerra e Crime</h1>
-    <loading v-model:active="isLoading" is-full-page />
+    <Loading v-model:active="isLoading" is-full-page />
+
     <div class="tv-show-list">
-      <div v-for="tvShow in tvShows" :key="tvShow.id" class="tv-show-card">
-        <img :src="`https://image.tmdb.org/t/p/w500${tvShow.poster_path}`" :alt="tvShow.name"
-          @click="openTvShow(tvShow.id)" />
+      <div v-for="tvShow in tvShows" :key="tvShow.id" class="tv-show-card" @click="openTvShow(tvShow.id)">
+        <img
+          v-if="tvShow.poster_path"
+          :src="`https://image.tmdb.org/t/p/w500${tvShow.poster_path}`"
+          :alt="tvShow.name"
+        />
         <div class="tv-show-details">
           <p class="tv-show-title">{{ tvShow.name }}</p>
-          <p class="tv-show-release-date">{{ new Date(tvShow.first_air_date).toLocaleDateString('pt-BR') }}</p>
+          <p class="tv-show-release-date">
+            {{ tvShow.first_air_date ? new Date(tvShow.first_air_date).toLocaleDateString('pt-BR') : 'Data desconhecida' }}
+          </p>
         </div>
       </div>
     </div>
@@ -60,6 +67,7 @@ $highlight: #ff9800;
 $text-primary: #f5f5f5;
 $text-muted: lighten($text-primary, 20%);
 $shadow: rgba(0, 0, 0, 0.5);
+
 * {
   margin: 0;
   padding: 0;
@@ -67,10 +75,11 @@ $shadow: rgba(0, 0, 0, 0.5);
 }
 
 .container {
-  height: auto;
+  min-height: 100vh;
   font-family: 'Roboto', sans-serif;
   background: linear-gradient(180deg, #2b2b2b, #000000);
   color: $text-primary;
+  padding: 2rem;
 }
 
 h1 {
@@ -78,6 +87,7 @@ h1 {
   text-align: center;
   color: $highlight;
   text-shadow: 0 2px 4px $shadow;
+  margin-bottom: 2rem;
 }
 
 .tv-show-list {
@@ -85,7 +95,6 @@ h1 {
   flex-wrap: wrap;
   gap: 1.5rem;
   justify-content: center;
-  padding: 2rem;
 }
 
 .tv-show-card {
@@ -131,17 +140,5 @@ h1 {
       color: $text-muted;
     }
   }
-}
-.loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
 }
 </style>
